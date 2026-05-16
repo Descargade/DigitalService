@@ -15,15 +15,6 @@ export interface BudgetInfo {
   summary: string;
 }
 
-export const baseServices = [
-  { id: "landing", name: "Landing Page Simple", price: 30000 },
-  { id: "landing-turnos", name: "Landing + Turnos + Confirmación", price: 45000 },
-  { id: "ventas", name: "Página de Ventas", price: 60000 },
-  { id: "negocios", name: "Web para Negocios", price: 120000 },
-  { id: "catalogo", name: "Catálogo Online", price: 100000 },
-  { id: "profesional", name: "Sitio Web Profesional", price: 200000 },
-];
-
 export const extras = [
   { id: "turnos", name: "Sistema de turnos", price: 10000 },
   { id: "confirmacion", name: "Confirmación automática", price: 10000 },
@@ -33,20 +24,68 @@ export const extras = [
   { id: "hosting", name: "Hosting / configuración", price: 10000 },
 ];
 
-const includedExtrasByService: Record<string, string[]> = {
-  "landing-turnos": ["turnos", "confirmacion"],
+export const baseServices = [
+  {
+    id: "landing",
+    name: "Landing Page Simple",
+    price: 30000,
+    includedExtras: [],
+    disabledExtras: [],
+  },
 
-  profesional: [
-    "turnos",
-    "confirmacion",
-    "hosting",
-  ],
+  {
+    id: "landing-turnos",
+    name: "Landing + Turnos + Confirmación",
+    price: 45000,
+    includedExtras: ["turnos", "confirmacion"],
+    disabledExtras: ["turnos", "confirmacion"],
+  },
 
-  negocios: [
-    "db",
-    "hosting",
-  ],
-};
+  {
+    id: "ventas",
+    name: "Página de Ventas",
+    price: 60000,
+    includedExtras: [],
+    disabledExtras: ["turnos", "confirmacion"],
+  },
+
+  {
+    id: "negocios",
+    name: "Web para Negocios",
+    price: 120000,
+    includedExtras: ["hosting", "login", "confirmacion", "admin"],
+    disabledExtras: ["turnos", "hosting", "login", "confirmacion", "admin"],
+  },
+
+  {
+    id: "catalogo",
+    name: "Catálogo Online",
+    price: 100000,
+    includedExtras: ["hosting", "login"],
+    disabledExtras: ["turnos", "confirmacion", "hosting", "login"],
+  },
+
+  {
+    id: "profesional",
+    name: "Sitio Web Profesional",
+    price: 200000,
+    includedExtras: [
+      "confirmacion",
+      "login",
+      "admin",
+      "db",
+      "hosting",
+    ],
+    disabledExtras: [
+      "turnos",
+      "confirmacion",
+      "login",
+      "admin",
+      "db",
+      "hosting",
+    ],
+  },
+];
 
 export const formatPrice = (price: number) =>
   new Intl.NumberFormat("es-AR", {
@@ -63,13 +102,44 @@ export function BudgetCalculator({ onBudgetChange }: Props) {
   const [selectedBase, setSelectedBase] = useState<string>("landing");
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
 
-  useEffect(() => {
-    const included = includedExtrasByService[selectedBase] || [];
+  const currentBaseService = useMemo(
+    () => baseServices.find((s) => s.id === selectedBase) || baseServices[0],
+    [selectedBase]
+  );
 
+  const includedExtras = useMemo(
+    () =>
+      extras.filter((e) =>
+        currentBaseService.includedExtras.includes(e.id)
+      ),
+    [currentBaseService]
+  );
+
+  const availableExtras = useMemo(
+    () =>
+      extras.filter(
+        (e) => !currentBaseService.disabledExtras.includes(e.id)
+      ),
+    [currentBaseService]
+  );
+
+  const currentSelectedExtras = useMemo(
+    () => extras.filter((e) => selectedExtras.includes(e.id)),
+    [selectedExtras]
+  );
+
+  const allExtras = useMemo(
+    () => [...includedExtras, ...currentSelectedExtras],
+    [includedExtras, currentSelectedExtras]
+  );
+
+  useEffect(() => {
     setSelectedExtras((prev) =>
-      prev.filter((extra) => !included.includes(extra))
+      prev.filter(
+        (id) => !currentBaseService.disabledExtras.includes(id)
+      )
     );
-  }, [selectedBase]);
+  }, [currentBaseService]);
 
   const toggleExtra = (id: string) => {
     setSelectedExtras((prev) =>
@@ -79,84 +149,45 @@ export function BudgetCalculator({ onBudgetChange }: Props) {
     );
   };
 
-  const currentBaseService = useMemo(
-    () =>
-      baseServices.find((s) => s.id === selectedBase) ||
-      baseServices[0],
-    [selectedBase]
-  );
-
-  const currentExtras = useMemo(
-    () => extras.filter((e) => selectedExtras.includes(e.id)),
-    [selectedExtras]
-  );
-
   const totalPrice = useMemo(() => {
     return (
       currentBaseService.price +
-      currentExtras.reduce((sum, e) => sum + e.price, 0)
+      currentSelectedExtras.reduce((sum, e) => sum + e.price, 0)
     );
-  }, [currentBaseService, currentExtras]);
+  }, [currentBaseService, currentSelectedExtras]);
 
   useEffect(() => {
     if (!onBudgetChange) return;
 
-    const includedExtras =
-      includedExtrasByService[selectedBase] || [];
-
-    const includedNames = extras
-      .filter((e) => includedExtras.includes(e.id))
-      .map((e) => `${e.name} (incluido)`);
-
-    const selectedNames = currentExtras.map((e) => e.name);
-
-    const allExtras = [...includedNames, ...selectedNames];
+    const extraNames = allExtras.map((e) => e.name);
 
     const summary =
       `Servicio: ${currentBaseService.name}\n` +
-      (allExtras.length > 0
-        ? `Extras: ${allExtras.join(", ")}\n`
+      (extraNames.length > 0
+        ? `Extras: ${extraNames.join(", ")}\n`
         : "") +
       `Total: ${formatPrice(totalPrice)} ARS`;
 
     onBudgetChange({
       service: currentBaseService.name,
-      extras: allExtras,
+      extras: extraNames,
       total: totalPrice,
       summary,
     });
   }, [
     currentBaseService,
-    currentExtras,
+    allExtras,
     totalPrice,
     onBudgetChange,
-    selectedBase,
   ]);
 
   const generateMessage = () => {
-    const includedExtras =
-      includedExtrasByService[selectedBase] || [];
-
-    const includedNames = extras
-      .filter((e) => includedExtras.includes(e.id))
-      .map((e) => `- ${e.name} (Incluido)`);
-
-    const selectedNames = currentExtras.map(
-      (e) => `- ${e.name}`
-    );
-
     const extrasList =
-      [...includedNames, ...selectedNames].join("\n") ||
-      "Ninguno";
+      allExtras.length > 0
+        ? allExtras.map((e) => `- ${e.name}`).join("\n")
+        : "Ninguno";
 
-    return `Hola 2bleA! Quiero el siguiente presupuesto:
-
-Servicio: ${currentBaseService.name}
-
-Extras:
-${extrasList}
-
-Total estimado: ${formatPrice(totalPrice)} ARS`;
+    return `Hola 2bleA! Quiero el siguiente presupuesto:\n\nServicio: ${currentBaseService.name}\nExtras:\n${extrasList}\n\nTotal estimado: ${formatPrice(totalPrice)} ARS`;
   };
 
   const handleWhatsApp = () => {
@@ -188,15 +219,15 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Configurator */}
+          {/* CONFIGURADOR */}
           <div className="lg:col-span-7 space-y-8">
+            {/* SERVICIO BASE */}
             <Card className="bg-background border-border shadow-sm">
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
                   <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-bold">
                     1
                   </span>
-
                   Elegí tu servicio base
                 </h3>
 
@@ -231,79 +262,81 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
               </CardContent>
             </Card>
 
+            {/* EXTRAS */}
             <Card className="bg-background border-border shadow-sm">
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
                   <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-bold">
                     2
                   </span>
-
-                  Agregá funcionalidades extras
+                  Funcionalidades disponibles
                 </h3>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {extras.map((extra) => {
-                    const includedExtras =
-                      includedExtrasByService[selectedBase] || [];
+                  {availableExtras.map((extra) => (
+                    <div
+                      key={extra.id}
+                      className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border border-border/50 hover:border-border transition-colors cursor-pointer"
+                      onClick={() => toggleExtra(extra.id)}
+                    >
+                      <Checkbox
+                        id={`extra-${extra.id}`}
+                        checked={selectedExtras.includes(extra.id)}
+                        onCheckedChange={() => toggleExtra(extra.id)}
+                        className="pointer-events-none"
+                      />
 
-                    const isIncluded = includedExtras.includes(
-                      extra.id
-                    );
+                      <div className="grid gap-1 leading-none w-full">
+                        <label
+                          htmlFor={`extra-${extra.id}`}
+                          className="text-sm font-medium cursor-pointer"
+                        >
+                          {extra.name}
+                        </label>
 
-                    return (
-                      <div
-                        key={extra.id}
-                        className={`flex items-center space-x-3 p-3 rounded-lg border transition-colors
-                        ${
-                          isIncluded
-                            ? "bg-primary/5 border-primary/20 opacity-70"
-                            : "bg-muted/30 border-border/50 hover:border-border cursor-pointer"
-                        }`}
-                        onClick={() => {
-                          if (!isIncluded) toggleExtra(extra.id);
-                        }}
-                      >
-                        <Checkbox
-                          id={`extra-${extra.id}`}
-                          checked={
-                            isIncluded ||
-                            selectedExtras.includes(extra.id)
-                          }
-                          disabled={isIncluded}
-                          onCheckedChange={() => {
-                            if (!isIncluded)
-                              toggleExtra(extra.id);
-                          }}
-                          className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground pointer-events-none"
-                        />
-
-                        <div className="grid gap-1 leading-none w-full">
-                          <label
-                            htmlFor={`extra-${extra.id}`}
-                            className="text-sm font-medium"
-                          >
-                            {extra.name}
-                          </label>
-
-                          {isIncluded ? (
-                            <p className="text-xs text-primary font-medium">
-                              ✓ Incluido en este plan
-                            </p>
-                          ) : (
-                            <p className="text-xs text-muted-foreground">
-                              +{formatPrice(extra.price)}
-                            </p>
-                          )}
-                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          +{formatPrice(extra.price)}
+                        </p>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
+
+                {includedExtras.length > 0 && (
+                  <div className="mt-8">
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-primary mb-4">
+                      Ya incluidos en este plan
+                    </h4>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {includedExtras.map((extra) => (
+                        <div
+                          key={extra.id}
+                          className="flex items-center justify-between bg-primary/10 border border-primary/20 p-3 rounded-lg"
+                        >
+                          <div>
+                            <p className="text-sm font-medium">
+                              {extra.name}
+                            </p>
+
+                            <p className="text-xs text-muted-foreground">
+                              Incluido
+                            </p>
+                          </div>
+
+                          <span className="text-primary text-sm font-semibold">
+                            ✓
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Live Summary */}
+          {/* RESUMEN */}
           <div className="lg:col-span-5 sticky top-24">
             <Card className="border-border shadow-lg bg-card/80 backdrop-blur-md relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent" />
@@ -331,15 +364,10 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
                   </div>
 
                   <AnimatePresence>
-                    {(currentExtras.length > 0 ||
-                      (includedExtrasByService[selectedBase] || [])
-                        .length > 0) && (
+                    {allExtras.length > 0 && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
-                        animate={{
-                          opacity: 1,
-                          height: "auto",
-                        }}
+                        animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         className="space-y-3"
                       >
@@ -348,45 +376,34 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
                             Extras
                           </p>
 
-                          {(includedExtrasByService[
-                            selectedBase
-                          ] || []).map((id) => {
-                            const extra = extras.find(
-                              (e) => e.id === id
-                            );
-
-                            if (!extra) return null;
+                          {allExtras.map((extra) => {
+                            const isIncluded =
+                              currentBaseService.includedExtras.includes(
+                                extra.id
+                              );
 
                             return (
                               <div
                                 key={extra.id}
                                 className="flex justify-between items-center text-sm py-1"
                               >
-                                <span className="text-primary">
-                                  {extra.name} · Incluido
+                                <span className="text-muted-foreground">
+                                  {extra.name}
+                                  {isIncluded && (
+                                    <span className="ml-2 text-primary">
+                                      (Incluido)
+                                    </span>
+                                  )}
                                 </span>
 
-                                <span className="text-primary">
-                                  GRATIS
+                                <span>
+                                  {isIncluded
+                                    ? "✓"
+                                    : formatPrice(extra.price)}
                                 </span>
                               </div>
                             );
                           })}
-
-                          {currentExtras.map((extra) => (
-                            <div
-                              key={extra.id}
-                              className="flex justify-between items-center text-sm py-1"
-                            >
-                              <span className="text-muted-foreground">
-                                {extra.name}
-                              </span>
-
-                              <span>
-                                {formatPrice(extra.price)}
-                              </span>
-                            </div>
-                          ))}
                         </div>
                       </motion.div>
                     )}
@@ -433,16 +450,6 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
                     <Mail className="mr-2 h-5 w-5" />
                     Enviar por Email
                   </Button>
-
-                  <p className="text-center text-xs text-muted-foreground pt-1">
-                    O completá el{" "}
-                    <a
-                      href="#contacto"
-                      className="text-primary hover:underline"
-                    >
-                      formulario de contacto
-                    </a>
-                  </p>
                 </div>
               </CardContent>
             </Card>
