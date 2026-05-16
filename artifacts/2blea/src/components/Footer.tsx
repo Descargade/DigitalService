@@ -1,4 +1,4 @@
-import { MessageCircle, Mail, ArrowUpRight } from "lucide-react";
+import { MessageCircle, Mail, ArrowUpRight, LayoutDashboard } from "lucide-react";
 
 const navLinks = [
   { name: "Servicios", href: "#servicios" },
@@ -14,7 +14,7 @@ export function Footer() {
       <div className="absolute top-0 right-0 w-[400px] h-[200px] bg-primary/5 rounded-full blur-[80px] pointer-events-none" />
 
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
             <a

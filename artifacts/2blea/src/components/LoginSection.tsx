@@ -20,9 +20,17 @@ export function LoginSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">Accedé a tu cuenta</h2>
-          <p className="text-muted-foreground text-lg">
-            Pronto podrás ver el estado de tu proyecto y comunicarte directamente con nosotros.
+          <p className="text-muted-foreground text-lg mb-4">
+            Seguí el avance de tu proyecto en tiempo real desde tu panel personal.
           </p>
+          <a
+            href="/portal"
+            data-testid="link-portal-demo"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" aria-hidden="true" />
+            Ver demo del portal de seguimiento
+          </a>
         </div>
 
         <div className="max-w-md mx-auto">
