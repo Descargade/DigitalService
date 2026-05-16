@@ -20,9 +20,7 @@ export const extras = [
   { id: "confirmacion", name: "Confirmación automática", price: 10000 },
   { id: "login", name: "Login de usuarios", price: 10000 },
   { id: "admin", name: "Panel administrador", price: 30000 },
-  { id: "db", name: "Base de datos", price: 6git add .
-git commit -m "feat: add client portal service section"
-git push0000 },
+  { id: "db", name: "Base de datos", price: 60000 },
   { id: "hosting", name: "Hosting / configuración", price: 15000 },
 ];
 
