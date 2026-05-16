@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, DollarSign, Layers, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MOCK_PROJECT } from "@/data/mockProject";
+import type { ProjectData } from "@/data/projects";
 
 const formatPrice = (n: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
@@ -11,8 +11,12 @@ const cardVariants = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { duration: 0.4, delay: i * 0.1 } }),
 };
 
-export function ProjectInfoCards() {
-  const { features, price, extras, payments } = MOCK_PROJECT;
+interface Props {
+  project: ProjectData;
+}
+
+export function ProjectInfoCards({ project }: Props) {
+  const { features, price, extras, payments } = project;
   const paid = payments.filter((p) => p.paid).reduce((s, p) => s + p.amount, 0);
   const pending = payments.filter((p) => !p.paid).reduce((s, p) => s + p.amount, 0);
 
@@ -94,9 +98,7 @@ export function ProjectInfoCards() {
                 <div
                   key={p.label}
                   className={`flex items-start justify-between p-4 rounded-xl border ${
-                    p.paid
-                      ? "bg-emerald-500/5 border-emerald-500/20"
-                      : "bg-muted/30 border-border"
+                    p.paid ? "bg-emerald-500/5 border-emerald-500/20" : "bg-muted/30 border-border"
                   }`}
                 >
                   <div>
@@ -116,8 +118,6 @@ export function ProjectInfoCards() {
                 </div>
               ))}
             </div>
-
-            {/* Progress bar */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Pagado: <span className="text-emerald-400 font-semibold">{formatPrice(paid)}</span></span>

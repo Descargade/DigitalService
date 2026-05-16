@@ -2,68 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ImageIcon, FileText, Upload, Download, Eye, CheckCircle2, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-interface ProjectFile {
-  id: number;
-  name: string;
-  type: "image" | "document";
-  size: string;
-  status: "received" | "pending";
-  date: string;
-  from: "client" | "agency";
-  preview?: string;
-}
-
-const MOCK_FILES: ProjectFile[] = [
-  {
-    id: 1,
-    name: "logo_barberia.png",
-    type: "image",
-    size: "142 KB",
-    status: "received",
-    date: "10 May 2026",
-    from: "client",
-    preview: "logo",
-  },
-  {
-    id: 2,
-    name: "fotos_local.zip",
-    type: "document",
-    size: "8.4 MB",
-    status: "received",
-    date: "10 May 2026",
-    from: "client",
-  },
-  {
-    id: 3,
-    name: "mockup_home.png",
-    type: "image",
-    size: "1.1 MB",
-    status: "received",
-    date: "12 May 2026",
-    from: "agency",
-    preview: "mockup",
-  },
-  {
-    id: 4,
-    name: "mockup_turnos.png",
-    type: "image",
-    size: "980 KB",
-    status: "received",
-    date: "12 May 2026",
-    from: "agency",
-    preview: "turnos",
-  },
-  {
-    id: 5,
-    name: "textos_web.docx",
-    type: "document",
-    size: "34 KB",
-    status: "pending",
-    date: "Pendiente",
-    from: "client",
-  },
-];
+import type { ProjectData, ProjectFile } from "@/data/projects";
 
 const PREVIEW_COLORS: Record<string, string> = {
   logo: "from-violet-600 to-blue-500",
@@ -74,7 +13,7 @@ const PREVIEW_COLORS: Record<string, string> = {
 function FileIcon({ file }: { file: ProjectFile }) {
   if (file.type === "image" && file.preview) {
     return (
-      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${PREVIEW_COLORS[file.preview] || "from-primary to-accent"} flex items-center justify-center flex-shrink-0`}>
+      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${PREVIEW_COLORS[file.preview] ?? "from-primary to-accent"} flex items-center justify-center flex-shrink-0`}>
         <ImageIcon className="h-6 w-6 text-white" aria-hidden="true" />
       </div>
     );
@@ -93,9 +32,13 @@ function FileIcon({ file }: { file: ProjectFile }) {
   );
 }
 
-export function ProjectFiles() {
+interface Props {
+  project: ProjectData;
+}
+
+export function ProjectFiles({ project }: Props) {
   const [dragging, setDragging] = useState(false);
-  const [files, setFiles] = useState(MOCK_FILES);
+  const [files, setFiles] = useState<ProjectFile[]>(project.files);
 
   const received = files.filter((f) => f.from === "client");
   const fromAgency = files.filter((f) => f.from === "agency");
@@ -141,24 +84,18 @@ export function ProjectFiles() {
         aria-label="Zona de carga de archivos"
       >
         <div className="flex flex-col items-center gap-3">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${
-            dragging ? "bg-primary/20" : "bg-muted"
-          }`}>
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${dragging ? "bg-primary/20" : "bg-muted"}`}>
             <Upload className={`h-7 w-7 transition-colors ${dragging ? "text-primary" : "text-muted-foreground"}`} aria-hidden="true" />
           </div>
           <div>
-            <p className="font-semibold text-foreground">
-              {dragging ? "Soltá los archivos acá" : "Arrastrá archivos aquí"}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Logo, fotos, textos, referencias de diseño...
-            </p>
+            <p className="font-semibold text-foreground">{dragging ? "Soltá los archivos acá" : "Arrastrá archivos aquí"}</p>
+            <p className="text-sm text-muted-foreground mt-1">Logo, fotos, textos, referencias de diseño…</p>
           </div>
           <p className="text-xs text-muted-foreground">PNG, JPG, PDF, DOCX · máx. 20 MB</p>
         </div>
       </div>
 
-      {/* Archivos del cliente */}
+      {/* Client files */}
       <div>
         <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">
           Tus archivos ({received.length})
@@ -210,7 +147,7 @@ export function ProjectFiles() {
         </div>
       </div>
 
-      {/* Archivos de la agencia */}
+      {/* Agency files */}
       <div>
         <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">
           Archivos de 2bleA ({fromAgency.length})
@@ -234,20 +171,10 @@ export function ProjectFiles() {
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0 opacity-60 hover:opacity-100 transition-opacity"
-                  aria-label={`Ver ${file.name}`}
-                >
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 opacity-60 hover:opacity-100 transition-opacity" aria-label={`Ver ${file.name}`}>
                   <Eye className="h-4 w-4" aria-hidden="true" />
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 w-8 p-0 opacity-60 hover:opacity-100 transition-opacity"
-                  aria-label={`Descargar ${file.name}`}
-                >
+                <Button size="sm" variant="ghost" className="h-8 w-8 p-0 opacity-60 hover:opacity-100 transition-opacity" aria-label={`Descargar ${file.name}`}>
                   <Download className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>

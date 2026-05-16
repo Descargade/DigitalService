@@ -3,68 +3,17 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MOCK_PROJECT } from "@/data/mockProject";
+import type { ProjectData, ProjectMessage } from "@/data/projects";
 
-interface Message {
-  id: number;
-  from: "client" | "agency";
-  text: string;
-  time: string;
-  read?: boolean;
+interface Props {
+  project: ProjectData;
 }
 
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: 1,
-    from: "agency",
-    text: `Hola ${MOCK_PROJECT.clientName}! Te damos la bienvenida al portal de seguimiento de tu proyecto. Estamos comenzando con la etapa de diseño.`,
-    time: "10 May · 09:15",
-    read: true,
-  },
-  {
-    id: 2,
-    from: "client",
-    text: "Perfecto! ¿Cuándo van a tener algo para ver?",
-    time: "10 May · 10:02",
-    read: true,
-  },
-  {
-    id: 3,
-    from: "agency",
-    text: "Mañana a la tarde te enviamos los primeros mockups del diseño para que los revises. Cualquier cambio lo coordenamos por acá.",
-    time: "10 May · 10:05",
-    read: true,
-  },
-  {
-    id: 4,
-    from: "client",
-    text: "Genial, muchas gracias. Una consulta: ¿el sistema de turnos va a tener notificaciones por WhatsApp?",
-    time: "11 May · 11:20",
-    read: true,
-  },
-  {
-    id: 5,
-    from: "agency",
-    text: "Sí, exacto. La confirmación automática que agregaste al presupuesto incluye notificaciones por WhatsApp tanto para vos como para el cliente que reserva el turno.",
-    time: "11 May · 11:35",
-    read: true,
-  },
-  {
-    id: 6,
-    from: "agency",
-    text: "Ya terminamos el diseño y pasamos a la etapa de desarrollo. Vas a ver el avance reflejado en el progreso. Estimamos entregar en 3-4 días hábiles.",
-    time: "13 May · 14:10",
-    read: true,
-  },
-];
-
-const clientInitials = MOCK_PROJECT.clientName.split(" ").map((n) => n[0]).join("").slice(0, 2);
-
-export function ProjectChat() {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+export function ProjectChat({ project }: Props) {
+  const [messages, setMessages] = useState<ProjectMessage[]>(project.messages);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-  let nextId = messages.length + 1;
+  const nextIdRef = useRef(project.messages.length + 1);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -75,18 +24,17 @@ export function ProjectChat() {
     if (!text) return;
     const now = new Date();
     const timeStr = `${now.getDate()} May · ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-    const newMsg: Message = { id: nextId++, from: "client", text, time: timeStr };
+    const newMsg: ProjectMessage = { id: nextIdRef.current++, from: "client", text, time: timeStr };
     setMessages((prev) => [...prev, newMsg]);
     setInput("");
 
-    // Simulated agency reply
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
         {
-          id: nextId++,
+          id: nextIdRef.current++,
           from: "agency",
-          text: "Recibimos tu mensaje. Te respondemos a la brevedad. ¡Gracias por la consulta!",
+          text: "Recibimos tu mensaje. Te respondemos a la brevedad. ¡Gracias!",
           time: timeStr,
         },
       ]);
@@ -100,9 +48,8 @@ export function ProjectChat() {
         <p className="text-sm text-muted-foreground">Comunicación directa con el equipo de 2bleA.</p>
       </div>
 
-      {/* Chat window */}
       <div className="rounded-2xl border border-border bg-card/60 overflow-hidden flex flex-col" style={{ height: "520px" }}>
-        {/* Chat header */}
+        {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-card/80">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
             <Bot className="h-4 w-4 text-white" aria-hidden="true" />
@@ -135,13 +82,11 @@ export function ProjectChat() {
                     </div>
                   )}
                   <div className={`max-w-[75%] ${isClient ? "order-first" : ""}`}>
-                    <div
-                      className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
-                        isClient
-                          ? "bg-primary text-white rounded-br-sm"
-                          : "bg-muted text-foreground rounded-bl-sm"
-                      }`}
-                    >
+                    <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      isClient
+                        ? "bg-primary text-white rounded-br-sm"
+                        : "bg-muted text-foreground rounded-bl-sm"
+                    }`}>
                       {msg.text}
                     </div>
                     <p className={`text-xs text-muted-foreground mt-1 ${isClient ? "text-right" : "text-left"}`}>
@@ -150,7 +95,7 @@ export function ProjectChat() {
                   </div>
                   {isClient && (
                     <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center flex-shrink-0 mb-1">
-                      <span className="text-white text-xs font-bold">{clientInitials}</span>
+                      <span className="text-white text-xs font-bold">{project.clientInitials}</span>
                     </div>
                   )}
                 </motion.div>
@@ -162,10 +107,7 @@ export function ProjectChat() {
 
         {/* Input */}
         <div className="px-4 py-3 border-t border-border bg-card/80">
-          <form
-            onSubmit={(e) => { e.preventDefault(); send(); }}
-            className="flex items-center gap-2"
-          >
+          <form onSubmit={(e) => { e.preventDefault(); send(); }} className="flex items-center gap-2">
             <Input
               data-testid="input-chat-message"
               value={input}

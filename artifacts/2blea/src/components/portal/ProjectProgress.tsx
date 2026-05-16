@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { CheckCircle2, Circle, Loader2 } from "lucide-react";
-import { MOCK_PROJECT } from "@/data/mockProject";
+import type { ProjectData } from "@/data/projects";
 
 const STAGES = [
   { name: "Consulta", description: "Relevamiento y presupuesto" },
@@ -11,8 +11,12 @@ const STAGES = [
   { name: "Entregado", description: "Publicación final" },
 ];
 
-export function ProjectProgress() {
-  const { currentStage, progress } = MOCK_PROJECT;
+interface Props {
+  project: ProjectData;
+}
+
+export function ProjectProgress({ project }: Props) {
+  const { currentStage, progress, deliveryDate } = project;
 
   return (
     <div className="space-y-6">
@@ -50,9 +54,7 @@ export function ProjectProgress() {
 
       {/* Timeline */}
       <div className="relative mt-8">
-        {/* Connector line (desktop) */}
         <div className="hidden sm:block absolute top-5 left-5 right-5 h-px bg-border z-0" aria-hidden="true" />
-
         <div className="grid grid-cols-2 sm:grid-cols-6 gap-4 relative z-10">
           {STAGES.map((stage, i) => {
             const isDone = i < currentStage;
@@ -67,7 +69,6 @@ export function ProjectProgress() {
                 transition={{ duration: 0.4, delay: i * 0.08 }}
                 className="flex flex-col items-center text-center gap-2"
               >
-                {/* Icon */}
                 <div className="relative">
                   {isDone && (
                     <div className="w-10 h-10 rounded-full bg-primary/20 border border-primary flex items-center justify-center">
@@ -85,13 +86,9 @@ export function ProjectProgress() {
                     </div>
                   )}
                 </div>
-
-                {/* Label */}
                 <div>
                   <p className={`text-xs font-semibold leading-tight ${
-                    isDone ? "text-primary" :
-                    isCurrent ? "text-foreground" :
-                    "text-muted-foreground"
+                    isDone ? "text-primary" : isCurrent ? "text-foreground" : "text-muted-foreground"
                   }`}>
                     {stage.name}
                   </p>
@@ -117,13 +114,15 @@ export function ProjectProgress() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-foreground">Actualmente en: {STAGES[currentStage].name}</p>
-          <p className="text-sm text-muted-foreground mt-1">{STAGES[currentStage].description} — tu equipo está trabajando en esta etapa.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            {STAGES[currentStage].description} — tu equipo está trabajando en esta etapa.
+          </p>
           <div className="flex items-center gap-2 mt-3">
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-500/15 border border-blue-500/30 text-xs font-medium text-blue-400">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" aria-hidden="true" />
               En progreso
             </span>
-            <span className="text-xs text-muted-foreground">Entrega estimada: {MOCK_PROJECT.deliveryDate}</span>
+            <span className="text-xs text-muted-foreground">Entrega estimada: {deliveryDate}</span>
           </div>
         </div>
       </motion.div>
