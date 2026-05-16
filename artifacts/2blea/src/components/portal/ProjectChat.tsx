@@ -3,41 +3,46 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { ProjectData, ProjectMessage } from "@/data/projects";
+import { addMessage } from "@/lib/store";
+import type { ProjectData } from "@/data/projects";
 
 interface Props {
   project: ProjectData;
 }
 
 export function ProjectChat({ project }: Props) {
-  const [messages, setMessages] = useState<ProjectMessage[]>(project.messages);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
-  const nextIdRef = useRef(project.messages.length + 1);
+  const isTypingRef = useRef(false);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!isTypingRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [project.messages]);
 
   const send = () => {
     const text = input.trim();
     if (!text) return;
     const now = new Date();
     const timeStr = `${now.getDate()} May · ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-    const newMsg: ProjectMessage = { id: nextIdRef.current++, from: "client", text, time: timeStr };
-    setMessages((prev) => [...prev, newMsg]);
+
+    addMessage(project.code, {
+      id: Date.now(),
+      from: "client",
+      text,
+      time: timeStr,
+    });
     setInput("");
+    isTypingRef.current = false;
 
     setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: nextIdRef.current++,
-          from: "agency",
-          text: "Recibimos tu mensaje. Te respondemos a la brevedad. ¡Gracias!",
-          time: timeStr,
-        },
-      ]);
+      addMessage(project.code, {
+        id: Date.now() + 1,
+        from: "agency",
+        text: "Recibimos tu mensaje. Te respondemos a la brevedad. ¡Gracias!",
+        time: timeStr,
+      });
     }, 1200);
   };
 
@@ -66,7 +71,7 @@ export function ProjectChat({ project }: Props) {
         {/* Messages */}
         <div className="flex-1 overflow-y-auto px-5 py-5 space-y-4">
           <AnimatePresence initial={false}>
-            {messages.map((msg) => {
+            {project.messages.map((msg) => {
               const isClient = msg.from === "client";
               return (
                 <motion.div
@@ -111,7 +116,7 @@ export function ProjectChat({ project }: Props) {
             <Input
               data-testid="input-chat-message"
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => { setInput(e.target.value); isTypingRef.current = true; }}
               placeholder="Escribí tu mensaje..."
               className="flex-1 bg-muted/50 border-border focus:border-primary text-sm h-10"
               aria-label="Escribir mensaje"

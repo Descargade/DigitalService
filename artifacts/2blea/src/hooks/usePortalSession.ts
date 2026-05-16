@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PROJECTS, type ProjectData } from "@/data/projects";
+import { useProjectData } from "@/hooks/useProjectStore";
 
 const STORAGE_KEY = "2blea_portal_code";
 
@@ -12,7 +12,7 @@ export function usePortalSession() {
     }
   });
 
-  const project: ProjectData | null = code ? (PROJECTS[code] ?? null) : null;
+  const project = useProjectData(code);
 
   const login = (newCode: string) => {
     try {
