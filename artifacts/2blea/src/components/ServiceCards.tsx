@@ -27,7 +27,7 @@ const services = [
     icon: <ShoppingCart className="h-8 w-8" />,
     title: "Página de Ventas",
     description: "Convierte visitas en ventas con una página optimizada para conversiones.",
-    price: 80000,
+    price: 60000,
     color: "from-emerald-500/20 to-teal-500/20",
     iconColor: "text-emerald-400"
   },
