@@ -59,15 +59,17 @@ export function LoginSection() {
                     <CardTitle className="text-xl">Bienvenido de vuelta</CardTitle>
                     <CardDescription>Ingresá tus datos para acceder a tu cuenta.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-5">
+                  <CardContent>
+                    <form onSubmit={(e) => e.preventDefault()} className="space-y-5">
                     <div className="space-y-2">
                       <Label htmlFor="login-email">Email</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                         <Input
                           id="login-email"
                           data-testid="input-login-email"
                           type="email"
+                          autoComplete="email"
                           placeholder="tu@email.com"
                           className="pl-10 bg-muted/50 border-border focus:border-primary"
                         />
@@ -76,17 +78,19 @@ export function LoginSection() {
                     <div className="space-y-2">
                       <Label htmlFor="login-password">Contraseña</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                         <Input
                           id="login-password"
                           data-testid="input-login-password"
                           type={showPassword ? "text" : "password"}
+                          autoComplete="current-password"
                           placeholder="••••••••"
                           className="pl-10 pr-10 bg-muted/50 border-border focus:border-primary"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -94,6 +98,7 @@ export function LoginSection() {
                       </div>
                     </div>
                     <Button
+                      type="submit"
                       data-testid="button-login"
                       className="w-full h-11 bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] transition-all"
                     >
@@ -109,6 +114,7 @@ export function LoginSection() {
                         Registrate
                       </button>
                     </p>
+                    </form>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -126,14 +132,16 @@ export function LoginSection() {
                     <CardTitle className="text-xl">Crear una cuenta</CardTitle>
                     <CardDescription>Completá el formulario para registrarte.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent>
+                    <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="reg-name">Nombre</Label>
                       <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                         <Input
                           id="reg-name"
                           data-testid="input-register-name"
+                          autoComplete="name"
                           placeholder="Tu nombre"
                           className="pl-10 bg-muted/50 border-border focus:border-primary"
                         />
@@ -142,11 +150,12 @@ export function LoginSection() {
                     <div className="space-y-2">
                       <Label htmlFor="reg-email">Email</Label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                         <Input
                           id="reg-email"
                           data-testid="input-register-email"
                           type="email"
+                          autoComplete="email"
                           placeholder="tu@email.com"
                           className="pl-10 bg-muted/50 border-border focus:border-primary"
                         />
@@ -155,17 +164,19 @@ export function LoginSection() {
                     <div className="space-y-2">
                       <Label htmlFor="reg-password">Contraseña</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                         <Input
                           id="reg-password"
                           data-testid="input-register-password"
                           type={showPassword ? "text" : "password"}
+                          autoComplete="new-password"
                           placeholder="••••••••"
                           className="pl-10 pr-10 bg-muted/50 border-border focus:border-primary"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
+                          aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -175,17 +186,19 @@ export function LoginSection() {
                     <div className="space-y-2">
                       <Label htmlFor="reg-confirm">Confirmar contraseña</Label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                         <Input
                           id="reg-confirm"
                           data-testid="input-register-confirm"
                           type={showConfirm ? "text" : "password"}
+                          autoComplete="new-password"
                           placeholder="••••••••"
                           className="pl-10 pr-10 bg-muted/50 border-border focus:border-primary"
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirm(!showConfirm)}
+                          aria-label={showConfirm ? "Ocultar confirmación" : "Mostrar confirmación"}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         >
                           {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -193,6 +206,7 @@ export function LoginSection() {
                       </div>
                     </div>
                     <Button
+                      type="submit"
                       data-testid="button-register"
                       className="w-full h-11 bg-gradient-to-r from-primary to-accent text-white hover:opacity-90 shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:shadow-[0_0_25px_rgba(139,92,246,0.5)] transition-all"
                     >
@@ -208,6 +222,7 @@ export function LoginSection() {
                         Iniciá sesión
                       </button>
                     </p>
+                    </form>
                   </CardContent>
                 </Card>
               </motion.div>

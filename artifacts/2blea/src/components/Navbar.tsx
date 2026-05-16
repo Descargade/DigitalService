@@ -20,6 +20,7 @@ export function Navbar() {
     { name: "Presupuesto", href: "#presupuesto" },
     { name: "Opiniones", href: "#opiniones" },
     { name: "FAQ", href: "#faq" },
+    { name: "Contacto", href: "#contacto" },
   ];
 
   return (

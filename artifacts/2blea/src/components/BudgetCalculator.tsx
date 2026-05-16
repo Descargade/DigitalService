@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MessageCircle, Mail } from "lucide-react";
 
-const baseServices = [
+export interface BudgetInfo {
+  service: string;
+  extras: string[];
+  total: number;
+  summary: string;
+}
+
+export const baseServices = [
   { id: "landing", name: "Landing Page Simple", price: 30000 },
   { id: "landing-turnos", name: "Landing + Turnos", price: 40000 },
   { id: "ventas", name: "Página de Ventas", price: 30000 },
@@ -17,7 +24,7 @@ const baseServices = [
   { id: "profesional", name: "Sitio Web Profesional", price: 30000 },
 ];
 
-const extras = [
+export const extras = [
   { id: "turnos", name: "Sistema de turnos", price: 10000 },
   { id: "confirmacion", name: "Confirmación automática", price: 10000 },
   { id: "login", name: "Login de usuarios", price: 5000 },
@@ -26,15 +33,18 @@ const extras = [
   { id: "hosting", name: "Hosting / configuración", price: 10000 },
 ];
 
-const formatPrice = (price: number) => {
-  return new Intl.NumberFormat("es-AR", {
+export const formatPrice = (price: number) =>
+  new Intl.NumberFormat("es-AR", {
     style: "currency",
     currency: "ARS",
     maximumFractionDigits: 0,
   }).format(price);
-};
 
-export function BudgetCalculator() {
+interface Props {
+  onBudgetChange?: (info: BudgetInfo) => void;
+}
+
+export function BudgetCalculator({ onBudgetChange }: Props) {
   const [selectedBase, setSelectedBase] = useState<string>("landing");
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
 
@@ -55,35 +65,38 @@ export function BudgetCalculator() {
   );
 
   const totalPrice = useMemo(() => {
-    const base = currentBaseService.price;
-    const extrasTotal = currentExtras.reduce((sum, extra) => sum + extra.price, 0);
-    return base + extrasTotal;
+    return currentBaseService.price + currentExtras.reduce((sum, e) => sum + e.price, 0);
   }, [currentBaseService, currentExtras]);
 
+  useEffect(() => {
+    if (!onBudgetChange) return;
+    const extraNames = currentExtras.map((e) => e.name);
+    const summary =
+      `Servicio: ${currentBaseService.name}\n` +
+      (extraNames.length > 0 ? `Extras: ${extraNames.join(", ")}\n` : "") +
+      `Total: ${formatPrice(totalPrice)} ARS`;
+    onBudgetChange({
+      service: currentBaseService.name,
+      extras: extraNames,
+      total: totalPrice,
+      summary,
+    });
+  }, [currentBaseService, currentExtras, totalPrice, onBudgetChange]);
+
   const generateMessage = () => {
-    const serviceName = currentBaseService.name;
-    const extrasList = currentExtras.length > 0 
-      ? currentExtras.map(e => `- ${e.name}`).join("\n") 
-      : "Ninguno";
-    
-    return `Hola 2bleA! Quiero el siguiente presupuesto:
-
-Servicio: ${serviceName}
-Extras:
-${extrasList}
-
-Total estimado: ${formatPrice(totalPrice)} ARS`;
+    const extrasList =
+      currentExtras.length > 0
+        ? currentExtras.map((e) => `- ${e.name}`).join("\n")
+        : "Ninguno";
+    return `Hola 2bleA! Quiero el siguiente presupuesto:\n\nServicio: ${currentBaseService.name}\nExtras:\n${extrasList}\n\nTotal estimado: ${formatPrice(totalPrice)} ARS`;
   };
 
   const handleWhatsApp = () => {
-    const text = encodeURIComponent(generateMessage());
-    window.open(`https://wa.me/5492622530837?text=${text}`, "_blank");
+    window.open(`https://wa.me/5492622530837?text=${encodeURIComponent(generateMessage())}`, "_blank");
   };
 
   const handleEmail = () => {
-    const subject = encodeURIComponent("Presupuesto 2bleA");
-    const body = encodeURIComponent(generateMessage());
-    window.location.href = `mailto:2bleadeveloper@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:2bleadeveloper@gmail.com?subject=${encodeURIComponent("Presupuesto 2bleA")}&body=${encodeURIComponent(generateMessage())}`;
   };
 
   return (
@@ -100,16 +113,22 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
             <Card className="bg-background border-border shadow-sm">
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-bold">1</span>
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-bold" aria-hidden="true">1</span>
                   Elegí tu servicio base
                 </h3>
-                <RadioGroup value={selectedBase} onValueChange={setSelectedBase} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <RadioGroup
+                  value={selectedBase}
+                  onValueChange={setSelectedBase}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                  aria-label="Servicio base"
+                >
                   {baseServices.map((service) => (
                     <div key={service.id}>
                       <RadioGroupItem value={service.id} id={`base-${service.id}`} className="peer sr-only" />
                       <Label
                         htmlFor={`base-${service.id}`}
-                        className="flex flex-col items-start justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
+                        data-testid={`service-option-${service.id}`}
+                        className="flex flex-col items-start justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent/10 peer-data-[state=checked]:border-primary cursor-pointer transition-all"
                       >
                         <span className="font-semibold block w-full">{service.name}</span>
                         <span className="text-sm text-muted-foreground mt-1 block">{formatPrice(service.price)}</span>
@@ -123,23 +142,26 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
             <Card className="bg-background border-border shadow-sm">
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-bold">2</span>
+                  <span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-bold" aria-hidden="true">2</span>
                   Agregá funcionalidades extras
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" role="group" aria-label="Funcionalidades extras">
                   {extras.map((extra) => (
-                    <div key={extra.id} className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border border-border/50 hover:border-border transition-colors">
+                    <div
+                      key={extra.id}
+                      className="flex items-center space-x-3 bg-muted/30 p-3 rounded-lg border border-border/50 hover:border-border transition-colors cursor-pointer"
+                      onClick={() => toggleExtra(extra.id)}
+                    >
                       <Checkbox
                         id={`extra-${extra.id}`}
+                        data-testid={`extra-${extra.id}`}
                         checked={selectedExtras.includes(extra.id)}
                         onCheckedChange={() => toggleExtra(extra.id)}
-                        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                        aria-label={`${extra.name} +${formatPrice(extra.price)}`}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground pointer-events-none"
                       />
-                      <div className="grid gap-1.5 leading-none cursor-pointer w-full" onClick={() => toggleExtra(extra.id)}>
-                        <label
-                          htmlFor={`extra-${extra.id}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                        >
+                      <div className="grid gap-1 leading-none w-full">
+                        <label htmlFor={`extra-${extra.id}`} className="text-sm font-medium cursor-pointer pointer-events-none">
                           {extra.name}
                         </label>
                         <p className="text-xs text-muted-foreground">+{formatPrice(extra.price)}</p>
@@ -154,10 +176,10 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
           {/* Live Summary */}
           <div className="lg:col-span-5 sticky top-24">
             <Card className="border-border shadow-lg bg-card/80 backdrop-blur-md relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent"></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent" aria-hidden="true" />
               <CardContent className="p-6 sm:p-8">
                 <h3 className="text-2xl font-bold mb-6">Resumen</h3>
-                
+
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between items-start">
                     <div>
@@ -169,7 +191,7 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
 
                   <AnimatePresence>
                     {currentExtras.length > 0 && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
@@ -177,7 +199,7 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
                       >
                         <div className="pt-2">
                           <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-semibold">Extras</p>
-                          {currentExtras.map(extra => (
+                          {currentExtras.map((extra) => (
                             <div key={extra.id} className="flex justify-between items-center text-sm py-1">
                               <span className="text-muted-foreground">{extra.name}</span>
                               <span>{formatPrice(extra.price)}</span>
@@ -193,32 +215,44 @@ Total estimado: ${formatPrice(totalPrice)} ARS`;
 
                 <div className="flex justify-between items-end mb-8">
                   <p className="text-lg font-medium text-muted-foreground">Total estimado</p>
-                  <motion.p 
+                  <motion.p
                     key={totalPrice}
                     initial={{ scale: 1.1, color: "hsl(var(--primary))" }}
                     animate={{ scale: 1, color: "hsl(var(--foreground))" }}
-                    className="text-4xl font-black text-foreground"
+                    className="text-4xl font-black"
+                    aria-live="polite"
+                    aria-label={`Total: ${formatPrice(totalPrice)}`}
                   >
                     {formatPrice(totalPrice)}
                   </motion.p>
                 </div>
 
                 <div className="space-y-3">
-                  <Button 
-                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white h-12 text-md shadow-[0_0_15px_rgba(37,211,102,0.2)] hover:shadow-[0_0_25px_rgba(37,211,102,0.4)] transition-all"
+                  <Button
+                    data-testid="button-whatsapp"
+                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white h-12 shadow-[0_0_15px_rgba(37,211,102,0.2)] hover:shadow-[0_0_25px_rgba(37,211,102,0.4)] transition-all"
                     onClick={handleWhatsApp}
+                    aria-label="Enviar presupuesto por WhatsApp"
                   >
-                    <MessageCircle className="mr-2 h-5 w-5" />
+                    <MessageCircle className="mr-2 h-5 w-5" aria-hidden="true" />
                     Enviar por WhatsApp
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    className="w-full h-12 text-md border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
+                  <Button
+                    data-testid="button-email"
+                    variant="outline"
+                    className="w-full h-12 border-primary/20 hover:bg-primary/10 hover:text-primary transition-colors"
                     onClick={handleEmail}
+                    aria-label="Enviar presupuesto por Email"
                   >
-                    <Mail className="mr-2 h-5 w-5" />
+                    <Mail className="mr-2 h-5 w-5" aria-hidden="true" />
                     Enviar por Email
                   </Button>
+                  <p className="text-center text-xs text-muted-foreground pt-1">
+                    O completá el{" "}
+                    <a href="#contacto" className="text-primary hover:underline">
+                      formulario de contacto
+                    </a>
+                  </p>
                 </div>
               </CardContent>
             </Card>
