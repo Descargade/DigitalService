@@ -7,8 +7,8 @@ const services = [
   {
     id: "landing-barberia",
     icon: <Scissors className="h-8 w-8" />,
-    title: "Landing Page Barbería",
-    description: "Atrae más clientes con una landing page moderna y profesional para tu barbería.",
+    title: "Landing Page",
+    description: "Atrae más clientes con una landing page moderna y profesional para tu negocio.",
     price: 30000,
     color: "from-blue-500/20 to-purple-500/20",
     iconColor: "text-blue-400"
@@ -18,7 +18,7 @@ const services = [
     icon: <CalendarClock className="h-8 w-8" />,
     title: "Landing Page Turnos",
     description: "Sistema online de reservas de turnos integrado en tu web.",
-    price: 40000,
+    price: 45000,
     color: "from-purple-500/20 to-pink-500/20",
     iconColor: "text-purple-400"
   },
@@ -27,7 +27,7 @@ const services = [
     icon: <ShoppingCart className="h-8 w-8" />,
     title: "Página de Ventas",
     description: "Convierte visitas en ventas con una página optimizada para conversiones.",
-    price: 30000,
+    price: 80000,
     color: "from-emerald-500/20 to-teal-500/20",
     iconColor: "text-emerald-400"
   },
@@ -36,7 +36,7 @@ const services = [
     icon: <Briefcase className="h-8 w-8" />,
     title: "Web para Negocios",
     description: "Presencia digital completa para tu negocio local o emprendimiento.",
-    price: 30000,
+    price: 120000,
     color: "from-orange-500/20 to-red-500/20",
     iconColor: "text-orange-400"
   },
@@ -45,7 +45,7 @@ const services = [
     icon: <Store className="h-8 w-8" />,
     title: "Catálogo Online",
     description: "Mostrá tus productos con un catálogo elegante y fácil de actualizar.",
-    price: 50000,
+    price: 100000,
     color: "from-indigo-500/20 to-cyan-500/20",
     iconColor: "text-cyan-400"
   },
@@ -54,7 +54,7 @@ const services = [
     icon: <Laptop className="h-8 w-8" />,
     title: "Sitio Web Profesional",
     description: "Web completa con panel admin, login de usuarios y base de datos.",
-    price: 90000,
+    price: 200000,
     color: "from-violet-500/20 to-fuchsia-500/20",
     iconColor: "text-primary"
   }
