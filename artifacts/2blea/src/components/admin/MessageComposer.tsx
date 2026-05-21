@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, CheckCircle2 } from "lucide-react";
-import { addMessage, getMessages } from "@/lib/store";
+import { addMessage, getLocalMessages } from "@/lib/store";
 import type { ProjectData } from "@/data/projects";
 
 interface Props {
@@ -14,7 +14,7 @@ export function MessageComposer({ projects }: Props) {
   const [sent, setSent] = useState(false);
 
   const selectedProject = projects.find((p) => p.code === selectedCode);
-  const messages = selectedProject ? getMessages(selectedCode) : [];
+  const messages = selectedProject ? getLocalMessages(selectedCode) : [];
   const agencyMessages = messages.filter((m) => m.from === "agency").slice(-5).reverse();
 
   const handleSend = () => {

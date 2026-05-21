@@ -1,10 +1,9 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, ShieldCheck, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
-import { PROJECTS } from "@/data/projects";
 
 interface PortalAccessProps {
-  onLogin: (code: string) => void;
+  onLogin: (code: string) => Promise<boolean> | boolean | void;
 }
 
 export function PortalAccess({ onLogin }: PortalAccessProps) {
@@ -27,17 +26,15 @@ export function PortalAccess({ onLogin }: PortalAccessProps) {
     setLoading(true);
     setError("");
 
-    await new Promise((r) => setTimeout(r, 900));
+    const result = await onLogin(trimmed);
 
-    if (PROJECTS[trimmed]) {
-      setSuccess(true);
-      await new Promise((r) => setTimeout(r, 1100));
-      onLogin(trimmed);
-    } else {
+    if (result === false) {
       setLoading(false);
       setError("Código inválido. Verificá y volvé a intentarlo.");
       triggerShake();
       inputRef.current?.focus();
+    } else {
+      setSuccess(true);
     }
   };
 

@@ -25,8 +25,8 @@ export function AdminLogin({ onLogin }: Props) {
     }
     setLoading(true);
     setError("");
-    await new Promise((r) => setTimeout(r, 800));
-    if (adminLogin(username, password)) {
+    const ok = await adminLogin(username, password);
+    if (ok) {
       onLogin();
     } else {
       setLoading(false);
