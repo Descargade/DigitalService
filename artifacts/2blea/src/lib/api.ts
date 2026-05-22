@@ -118,6 +118,20 @@ export async function updateProjectApi(
   }, "admin");
 }
 
+export interface CreateProjectInput {
+  clientName: string;
+  projectName: string;
+  projectType: string;
+  deliveryDate: string;
+}
+
+export async function createProjectApi(data: CreateProjectInput): Promise<ApiProjectData> {
+  return request<ApiProjectData>("/admin/projects", {
+    method: "POST",
+    body: JSON.stringify(data),
+  }, "admin");
+}
+
 export async function getMessagesApi(code: string): Promise<ProjectMessage[]> {
   return request<ProjectMessage[]>(`/messages/${code}`, undefined, "portal");
 }

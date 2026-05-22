@@ -2,9 +2,56 @@ import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { db } from "@workspace/db";
 import { adminUsersTable, projectsTable, paymentsTable, messagesTable, filesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, like, desc } from "drizzle-orm";
 import { signAdminToken } from "../lib/auth";
 import { requireAdmin, type AuthRequest } from "../lib/middleware";
+
+const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+function formatDateEs(d: Date): string {
+  return `${d.getDate()} ${MESES[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function toSlug(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .split("-")[0]
+    .slice(0, 10);
+}
+
+function getInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .map((w) => w[0]?.toUpperCase() ?? "")
+    .join("")
+    .slice(0, 3);
+}
+
+async function generateUniqueCode(clientName: string): Promise<string> {
+  const year = new Date().getFullYear();
+  const base = `${toSlug(clientName)}-${year}`;
+
+  const existing = await db
+    .select({ code: projectsTable.code })
+    .from(projectsTable)
+    .where(like(projectsTable.code, `${base}%`))
+    .orderBy(desc(projectsTable.createdAt));
+
+  if (existing.length === 0) return base;
+
+  const suffixes = existing
+    .map((r) => r.code.replace(`${base}`, ""))
+    .map((s) => (s === "" ? 1 : parseInt(s.replace(/^-/, ""), 10)))
+    .filter((n) => !isNaN(n));
+
+  const max = Math.max(...suffixes);
+  return `${base}-${max + 1}`;
+}
 
 const router = Router();
 
@@ -80,6 +127,48 @@ router.post("/admin/auth", async (req, res) => {
     res.json({ token, username: users[0].username });
   } catch (err) {
     req.log.error({ err }, "Admin auth error");
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+router.post("/admin/projects", requireAdmin, async (req: AuthRequest, res) => {
+  const { clientName, projectName, projectType, deliveryDate } = req.body as {
+    clientName?: string;
+    projectName?: string;
+    projectType?: string;
+    deliveryDate?: string;
+  };
+
+  if (!clientName?.trim() || !projectName?.trim() || !projectType?.trim() || !deliveryDate?.trim()) {
+    res.status(400).json({ error: "Todos los campos son requeridos" });
+    return;
+  }
+
+  try {
+    const code = await generateUniqueCode(clientName.trim());
+    const clientInitials = getInitials(clientName.trim());
+    const today = formatDateEs(new Date());
+
+    await db.insert(projectsTable).values({
+      code,
+      clientName: clientName.trim(),
+      clientInitials,
+      projectName: projectName.trim(),
+      projectType: projectType.trim(),
+      startDate: today,
+      deliveryDate: deliveryDate.trim(),
+      status: "En desarrollo",
+      progress: 0,
+      currentStage: 1,
+      price: 0,
+      extras: [],
+      features: [],
+    });
+
+    const created = await buildProjectResponse(code);
+    res.status(201).json(created);
+  } catch (err) {
+    req.log.error({ err }, "Admin create project error");
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

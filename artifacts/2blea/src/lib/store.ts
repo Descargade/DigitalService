@@ -9,6 +9,8 @@ import {
   clearAdminToken,
   updateProjectApi,
   addMessageApi,
+  createProjectApi,
+  type CreateProjectInput,
 } from "@/lib/api";
 
 export const STORE_EVENT = "2blea-store-update";
@@ -188,4 +190,11 @@ export function adminLogout() {
 
 export function isAdminAuthenticated(): boolean {
   return storageGet<boolean>(ADMIN_KEY) === true;
+}
+
+// ─── Create project ─────────────────────────────────────────────────────────────
+
+export async function createProject(input: CreateProjectInput): Promise<void> {
+  await createProjectApi(input);
+  dispatch();
 }

@@ -11,6 +11,7 @@ import { ProjectEditor } from "@/components/admin/ProjectEditor";
 import { MessageComposer } from "@/components/admin/MessageComposer";
 import { useAllProjects } from "@/hooks/useProjectStore";
 import { isAdminAuthenticated, adminLogout } from "@/lib/store";
+import { CreateProjectModal } from "@/components/admin/CreateProjectModal";
 
 const NAV = [
   { id: "dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -22,6 +23,7 @@ export default function Admin() {
   const [authed, setAuthed] = useState(() => isAdminAuthenticated());
   const [tab, setTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [creatingProject, setCreatingProject] = useState(false);
   const [editingCode, setEditingCode] = useState<string | null>(null);
   const projects = useAllProjects();
 
@@ -131,6 +133,12 @@ export default function Admin() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCreatingProject(true)}
+              className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              + Nuevo Proyecto
+            </button>
             <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-xs font-semibold text-orange-300">
               <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" aria-hidden="true" />
               Admin
@@ -191,6 +199,11 @@ export default function Admin() {
           />
         )}
       </AnimatePresence>
+      {creatingProject && (
+        <CreateProjectModal
+          onClose={() => setCreatingProject(false)}
+        />
+      )}
     </div>
   );
 }
